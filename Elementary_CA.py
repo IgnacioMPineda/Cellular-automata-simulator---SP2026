@@ -1,3 +1,8 @@
+import numpy as np
+import random
+
+
+
 def make_rule(rule_number: int) -> dict:
     if not (0 <= rule_number <= 255):
         raise ValueError(f"Rule number must be between 0 and 255, got {rule_number}")
