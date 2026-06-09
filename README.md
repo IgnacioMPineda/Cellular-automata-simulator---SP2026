@@ -1,8 +1,7 @@
 # Cellular-automata-simulator - SP2026
 
-Project focused on developing a code that automates all of the rules for elementary cellular automata.
-Develope a function of developed such that it takes the size of the grid, initial conditions and the rule that determines the system's evolution and for each of the rule's finds a way to determine which gives rise to chaotic behaviour.
+The objective of this repository is to build up towards the study of quantum cellular automata and study their chaotic behaviour. This is done by studying classical / semiclassical and quantum elementary cellular automata from almost first principles.
 
-The first step is creating the function that will give the evolution of the lattice for each timestep depending on the initial conditions and the rule given.
+The code is orgnized into numbered notebooks where the code of one will deoend on the code of the previous ones, marking a sense of progression as quantum CA are built up from their classicla counterparts:
 
-The next step is creating a code that determines which of them is chaotic depending in a criteria that is yet to be determined.
+A brief summary of the contents of each notebook goes as follows:
