@@ -95,13 +95,39 @@ def plot_cell(rule, cell_i, timesteps, L):
 
 
 
+def plot_column(arr, col, cols=100):
+    column = arr[:, col] if arr.ndim > 1 else arr
+    n = len(column)
+
+    def render_segment(seg, start_t):
+        print(f'{"":7}┌─┐')
+        for i, x in enumerate(seg):
+            t = start_t + i
+            dead = '█' if (t + col) % 2 == 0 else "□"  
+            print(f't={t:<4} │{"□" if x else dead}│')
+        print(f'{"":7}└─┘')
+
+    segments = [column[i:i+cols] for i in range(0, n, cols)]
+    for idx, seg in enumerate(segments):
+        render_segment(seg, idx * cols)
+        if idx < len(segments) - 1:
+            print()
 
 
-# Missing that column function
+def plot_multiple_cells(*cells):
+    fig, ax = plt.subplots(figsize=(10, 4))
 
+    for rule, initial_conditions, timesteps, L, cell_i in cells:
+        system = dynamics(rule, L, initial_conditions, timesteps)
 
+        ax.plot(system[:, cell_i], label=f'rule {rule} — cell {cell_i}')
 
-
+    ax.set_xlabel('timestep')
+    ax.set_ylabel('state (0 or 1)')
+    ax.set_yticks([0, 1])
+    ax.legend()
+    plt.tight_layout()
+    plt.show()
 
 
 
@@ -254,7 +280,60 @@ def mutual_information(rule, cell_i, cell_j):
     
     return H_x + H_y - H_xy
 
-# Missing effective complexity and associated functions
+def H_cell_EC(rule, cell_i, array=None): ### EC for effective complexity
+    if array is not None:
+        cell = array
+    else:
+        initial_conditions = np.random.randint(0, 2, size=1000)
+        row = list(np.where(initial_conditions == 1)[0])
+        system = dynamics(rule, 1000, row, 1000)
+        cell = system[:, cell_i]
+    
+    p1 = np.mean(cell)
+    p0 = 1 - p1
+    if p0 == 0 or p1 == 0:
+        return 0
+    return -p0 * np.log2(p0) - p1 * np.log2(p1)
+
+
+def H_two_cells_EC(rule, cell_i, cell_j, array_x=None, array_y=None):
+    if array_x is not None and array_y is not None:
+        x, y = array_x, array_y
+    else:
+        initial_conditions = np.random.randint(0, 2, size=1000)
+        row = list(np.where(initial_conditions == 1)[0])
+        system = dynamics(rule, 1000, row, 1000)
+        x = system[:, cell_i]
+        y = system[:, cell_j]
+    
+    p11 = np.mean((x == 1) & (y == 1))
+    p00 = np.mean((x == 0) & (y == 0))
+    p10 = np.mean((x == 1) & (y == 0))
+    p01 = np.mean((x == 0) & (y == 1))
+    
+    h = 0
+    for p in [p00, p01, p10, p11]:
+        if p > 0:
+            h -= p * np.log2(p)
+    return h
+
+
+def effective_complexity(rule):
+    L = 500
+    timesteps = 1000
+
+    initial_conditions = np.random.randint(0, 2, size=L)
+    row = list(np.where(initial_conditions == 1)[0])
+    system = dynamics(rule, L, row, timesteps)
+
+    initial = system[0, :]   # state of all cells at t=0
+    final   = system[-1, :]  # state of all cells at t=999
+
+    H_initial = H_cell_EC(rule, 0, array=initial)
+    H_final   = H_cell_EC(rule, 0, array=final)
+    H_joint   = H_two_cells_EC(rule, 0, 0, array_x=initial, array_y=final)
+
+    return H_initial + H_final - H_joint
 
 
 
@@ -314,4 +393,53 @@ def classify_by_lambda(rule):
         return f"Class IV (λ={λ:.3f})"
     else:
         return f"Class III (λ={λ:.3f})"
+
+
+
+
+def apply_rule(rule, state):
+    rule_bin = format(rule, '08b')[::-1]
+    L = len(state)
+    new_state = np.zeros(L, dtype=int)
+    for i in range(L):
+        left   = state[i - 1] if i > 0 else 0
+        center = state[i]
+        right  = state[i + 1] if i < L - 1 else 0
+        neighbourhood = left * 4 + center * 2 + right * 1
+        new_state[i] = int(rule_bin[neighbourhood])
+    return new_state
+
+def is_reversible(rule, L=10):
+    seen = {}
+    for i in range(2**L):
+        initial = np.array([int(b) for b in format(i, f'0{L}b')])
+        final = apply_rule(rule, initial)
+        initial_key = tuple(initial)
+        final_key   = tuple(final)
+        if final_key in seen:
+            if seen[final_key] != initial_key:
+                return False
+        else:
+            seen[final_key] = initial_key
+    return True
+
+
+def gardens_of_eden(rule, L=10):
+    all_states = set()
+    reachable  = set()
+
+    for i in range(2**L):
+        state = tuple(int(b) for b in format(i, f'0{L}b'))
+        all_states.add(state)
+        next_state = tuple(apply_rule(rule, np.array(state)))
+        reachable.add(next_state)
+
+    gardens = all_states - reachable
+
+    print(f"rule {rule}: {len(gardens)} gardens of Eden")
+    for g in sorted(gardens):
+        print(g)
+
+    return gardens, len(gardens)
+
 
