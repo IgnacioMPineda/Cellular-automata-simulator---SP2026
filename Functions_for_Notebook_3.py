@@ -245,3 +245,185 @@ def probabilistic_dynamics_initialandfinal(rule_number, L, initial_conditions, p
     grid = np.vstack(rows[::-1])
     return rows[0], "->", rows[-1]
 
+
+def vectorized_ic_probabilistic(L, initial_conditions, probability_list: list):
+    import itertools
+    
+    # build the lattice row — length L
+    row = np.zeros(L, dtype=int)
+    for i, probability in zip(initial_conditions, probability_list):
+        row[i] = 1 if random.random() < probability else 0       
+    
+    # find which index in all_states this corresponds to
+    all_states = list(itertools.product([0, 1], repeat=L))
+    index      = all_states.index(tuple(row))  
+    
+    # return a vector of length 2^L with a 1 at that index
+    v = np.zeros(2**L, dtype=int)
+    v[index] = 1
+    return v
+
+def markov_matrix_mapping_probabilistic(rule_number: int, L: int, p: float):
+    all_states   = list(itertools.product([0, 1], repeat=L))
+    n = len(all_states)
+    M = np.zeros((n, n), dtype=float)
+
+    state_labels = [''.join(str(b) for b in s) for s in all_states]
+    print(f"\nProbabilistic Transition matrix — Rule {rule_number}, L={L}, p={p}")
+    print(f"Row = next state   Col = current state\n")
+    print("        " + "  ".join(state_labels))
+    print("       " + "---" * n)
+
+    for j, state in enumerate(all_states):
+        nxt = next_state(state, rule_number, L)
+
+        # bits that rule maps to 0 → always 0
+        # bits that rule maps to 1 → 1 with probability p, else 0
+        probabilistic_nxt = tuple(
+            1 if (bit == 1 and random.random() < p) else 0
+            for bit in nxt
+        )
+
+        i        = all_states.index(probabilistic_nxt)
+        M[i][j]  = 1
+        label    = ''.join(str(b) for b in state)
+        row      = "  ".join(f"{M[k][j]:.0f}" for k in range(n))
+        print(f"{label}  |  {row}")
+
+
+
+def markov_matrix_probabilistic(rule_number: int, L: int, p: float):
+    all_states = list(itertools.product([0, 1], repeat=L))
+    n = len(all_states)
+    M = np.zeros((n, n), dtype=float)
+
+    for j, state in enumerate(all_states):
+        nxt = next_state(state, rule_number, L)  # deterministic next state
+
+        # build the probabilistic next state
+        probabilistic_nxt = tuple(
+            1 if (bit == 1 and random.random() < p) else 0
+            for bit in nxt
+        )
+        # bit == 0 → always stays 0
+        # bit == 1 → becomes 1 with probability p, else 0
+
+        i = all_states.index(probabilistic_nxt)
+        M[i][j] = 1
+
+    return M
+
+def markov_matrix_noise(rule_number: int, L: int, probability: float):
+    """
+    Normal CA transition matrix but every bit in the output
+    has a small probability epsilon of flipping.
+    
+    probability = 0.0 → identical to normal deterministic markov_matrix
+    probability = 0.5 → completely random, rule means nothing
+    probability = 1 → like if the rule was inversed
+    """
+    for j, state in enumerate(all_states):
+        nxt = next_state(state, rule_number, L)
+
+        # bits that rule maps to 0 → always 0
+        # bits that rule maps to 1 → 1 with probability p, else 0
+        probabilistic_nxt = tuple(
+            1 if (bit == 1 and random.random() < p) else 0
+            for bit in nxt
+        )
+
+        i        = all_states.index(probabilistic_nxt)
+        M[i][j]  = 1
+        label    = ''.join(str(b) for b in state)
+        row      = "  ".join(f"{M[k][j]:.0f}" for k in range(n))
+        print(f"{label}  |  {row}")
+
+
+
+def markov_matrix_probabilistic(rule_number: int, L: int, p: float):
+    all_states = list(itertools.product([0, 1], repeat=L))
+    n = len(all_states)
+    M = np.zeros((n, n), dtype=float)
+
+    for j, state in enumerate(all_states):
+        nxt = next_state(state, rule_number, L)  # deterministic next state
+
+        # build the probabilistic next state
+        probabilistic_nxt = tuple(
+            1 if (bit == 1 and random.random() < p) else 0
+            for bit in nxt
+        )
+        # bit == 0 → always stays 0
+        # bit == 1 → becomes 1 with probability p, else 0
+
+        i = all_states.index(probabilistic_nxt)
+        M[i][j] = 1
+
+    return M
+
+def markov_matrix_noise(rule_number: int, L: int, probability: float):
+    """
+    Normal CA transition matrix but every bit in the output
+    has a small probability epsilon of flipping.
+    
+    probability = 0.0 → identical to normal deterministic markov_matrix
+    probability = 0.5 → completely random, rule means nothing
+    probability = 1 → like if the rule was inversed
+    """
+
+    all_states = list(itertools.product([0, 1], repeat=L))
+    n  = len(all_states)
+    M = np.zeros((n, n), dtype=float)
+
+    for j, state in enumerate(all_states):
+        nxt = next_state(state, rule_number, L)  # deterministic next state
+
+        # apply bit-flip noise to every bit in nxt
+        noisy_nxt = tuple(
+            (1 - bit) if random.random() < probability else bit
+            for bit in nxt
+        )
+
+        i = all_states.index(noisy_nxt)
+        M[i][j] = 1
+
+    return M
+
+def is_reversible_matrix(M):
+    if np.linalg.det(M) != 0:
+        return True
+    else:
+        return False
+
+def spectral_radius(M):
+    eigenvalues = np.linalg.eig(M)[0]
+    return np.max(np.abs(eigenvalues))
+
+def spectral_gap(M):
+    eigenvalues = np.abs(np.linalg.eig(M)[0])  
+    eigenvalues = sorted(eigenvalues, reverse=True) 
+    eigenvalue_max_1 = eigenvalues[0]  
+    eigenvalue_max_2 = eigenvalues[1]   
+    return eigenvalue_max_1 - eigenvalue_max_2
+
+
+def algebraic_multiplicities(M):
+    eigvals = np.linalg.eigvals(M) # Direct way to get eigenvalues without slicing
+    
+    unique_vals = []
+    counts = []
+
+    for v in eigvals:
+        found = False
+        for i, u in enumerate(unique_vals):
+            if np.isclose(v, u):
+                counts[i] += 1
+                found = True
+                break
+        if not found:
+            unique_vals.append(v)
+            counts.append(1)
+
+    return list(zip(unique_vals, counts)) # Dictionaries behave strangely with float numbers, so just use tuples in lists
+
+
