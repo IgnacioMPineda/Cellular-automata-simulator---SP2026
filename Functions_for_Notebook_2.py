@@ -129,7 +129,88 @@ def plot_multiple_cells(*cells):
     plt.tight_layout()
     plt.show()
 
+def fourier_cell(rule_number, L, initial_conditions, timesteps, cell_index):
+    # run the CA
+    grid = dynamics(rule_number, L, initial_conditions, timesteps)
+    
+    # extract the time series for one cell
+    # grid is upside down so we reverse it to get time going forward
+    time_series = grid[::-1, cell_index]   # shape (timesteps+1,)
+    
+    # fourier transform - Directly integrated in numpy
+    fft    = np.fft.fft(time_series)
+    power  = np.abs(fft)**2                # power spectrum
+    freqs  = np.fft.fftfreq(len(time_series))  # frequencies
+    
+    # only plot positive frequencies, negative frequencies are mirrors of the positive and 
+    # contain no additional information
+    pos    = freqs > 0
+    
+    fig, axes = plt.subplots(1, 2, figsize=(14, 4))
+    
+    # left — original time series
+    axes[0].plot(time_series)
+    axes[0].set_title(f"time evolution of cell {cell_index} — rule {rule_number}")
+    axes[0].set_xlabel("timestep")
+    axes[0].set_ylabel("state (0 or 1)")
+    
+    # right — power spectrum
+    axes[1].plot(freqs[pos], power[pos])
+    axes[1].set_title(f"Fourier power spectrum — cell {cell_index} — rule {rule_number}")
+    axes[1].set_xlabel("frequency (cycles per timestep)")
+    axes[1].set_ylabel("power")
+    
+    # mark the dominant frequency
+    dominant_freq = freqs[pos][np.argmax(power[pos])] #This is just the tallest spike
+    axes[1].axvline(dominant_freq, color='red', linestyle='--', 
+                    label=f"dominant freq = {dominant_freq:.4f}")
+    axes[1].legend()
+    
+    plt.tight_layout()
+    plt.show()
+    
+    print(f"Dominant frequency: {dominant_freq:.4f} cycles/timestep")
+    print(f"Period: {1/dominant_freq:.1f} timesteps")
 
+# run it
+fourier_cell(67, 10, [1,7], 1000, cell_index=8)
+fourier_cell(90, 10, [1,7], 1000, cell_index = 9)
+        
+def fourier_all_cells(rule_number, L, initial_conditions, timesteps):
+    grid       = dynamics(rule_number, L, initial_conditions, timesteps)
+    time_series = grid[::-1]   
+    
+    fig, axes = plt.subplots(L, 2, figsize=(14, 2*L))
+    
+    for cell in range(L):
+        signal = time_series[:, cell]   # time series for this cell
+        
+        fft   = np.fft.fft(signal)
+        power = np.abs(fft)**2
+        freqs = np.fft.fftfreq(len(signal))
+        pos   = freqs > 0
+        
+        dominant_freq = freqs[pos][np.argmax(power[pos])]
+        period        = 1 / dominant_freq
+
+        axes[cell, 0].plot(signal)
+        axes[cell, 0].set_ylabel(f"cell {cell}")
+        axes[cell, 0].set_ylim(-0.1, 1.1)
+        if cell == 0:
+            axes[cell, 0].set_title("time evolution")
+        
+        axes[cell, 1].plot(freqs[pos], power[pos])
+        axes[cell, 1].axvline(dominant_freq, color='red', linestyle='--',
+                              label=f"f={dominant_freq:.3f} T={period:.1f}")
+        axes[cell, 1].legend(fontsize=7)
+        if cell == 0:
+            axes[cell, 1].set_title("power spectrum")
+
+    axes[-1, 0].set_xlabel("timestep")
+    axes[-1, 1].set_xlabel("frequency")
+    fig.suptitle(f"Fourier analysis — Rule {rule_number}, all cells", fontsize=13)
+    plt.tight_layout()
+    plt.show()
 
 def rule_1(rule):
     initial_conditions_1 = np.random.randint(0, 2, size=1000)
