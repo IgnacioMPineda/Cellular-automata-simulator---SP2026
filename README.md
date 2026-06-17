@@ -8,7 +8,7 @@ A brief summary of the contents of each notebook goes as follows:
 
 - Notebook 1:
 
-Derived elemntary cellular automata from first principles as well as defining the relevant formulas for plotting the outputs.
+Derived elemnetary cellular automata from first principles as well as defining the relevant formulas for plotting the outputs.
 
 - Notebook 2:
 
