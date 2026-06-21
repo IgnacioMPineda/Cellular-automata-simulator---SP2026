@@ -1,7 +1,8 @@
 import numpy as np
 import random
 
-
+def random_ic(L):
+    return np.random.randint(0, 2, size=L)
 
 def make_rule(rule_number: int) -> dict:
     if not (0 <= rule_number <= 255):
