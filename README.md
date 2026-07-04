@@ -16,4 +16,8 @@ Delved into the behaviour of elementary CA dpeending on rule and initial conditi
 
 - Notebook 3:
 
-This notebook marks the beggining of the build up towards the study of quantum cellular automata. A probabilistic approach is taken for the initial conditions and the evolution of the system is compared to its classical counterpart.
+This notebook marks the beggining of the build up towards the study of quantum cellular automata. A probabilistic approach is taken for the initial conditions and the evolution of the system is compared to its classical counterpart. We also define relevant functions for the study of transition matrices for classical and semiclassical elementary cellular automata.
+
+- Notebook 4:
+
+We carry out the study of quantum cellular automata and possible chaotic behaviour.
