@@ -1,3 +1,14 @@
+from Functions_for_Notebook_1 import make_rule
+
+
+def make_rule(rule_number: int) -> dict:
+    if not (0 <= rule_number <= 255):
+        raise ValueError(f"Rule number must be between 0 and 255, got {rule_number}")
+ 
+    rule_bin = format(rule_number, '08b')  # e.g. rule 110 -> '01101110 (encode it into byts)' The decimal -> binary process explained above
+    neighbourhoods = [format(i, '03b') for i in range(7, -1, -1)]  # '111' down to '000'
+ 
+    return {n: int(b) for n, b in zip(neighbourhoods, rule_bin)}
 
 def vectorized_ic(L, initial_conditions):
     import itertools
@@ -75,6 +86,28 @@ def markov_matrix(rule_number: int, L: int):
 def state_timestep(system, timestep):
     return system[:timestep]
 
+
+
+def dynamics_matrix(rule_number, L, initial_conditions, timesteps):
+
+    def decode_state(index, L):
+        """Inverse of vectorized_ic's binary indexing convention."""
+        return np.array([(index >> (L - 1 - i)) & 1 for i in range(L)], dtype=int)
+
+    M = markov_matrix(rule_number, L)
+    vector = vectorized_ic(L, initial_conditions)
+
+    rows = [decode_state(np.argmax(vector), L)]   # t=0
+    for _ in range(timesteps):
+        vector = M @ vector
+        rows.append(decode_state(np.argmax(vector), L))
+
+    grid = np.array(rows[::-1])   # earliest at bottom, matching dynamics()
+    return grid
+
+
+
+
 def probabilistic_dynamics(rule_number, L, initial_conditions, probability_list, timesteps):
     if not (0 <= rule_number <= 255):
         raise ValueError("Rule number not appropriate")
@@ -145,7 +178,8 @@ def probabilistic_dynamics_periodic(rule_number, L, initial_conditions, probabil
     for i, probability in zip(initial_conditions, probability_list):
         row[i] = 1 if random.random() < probability else 0
     rows = [row.copy()] #So we take an independent "snapshot"
-    
+
+
     # Evolve through timesteps
     for i in range(timesteps):
         new_row = np.zeros(L, dtype=int)
@@ -204,6 +238,7 @@ def probabilistic_dynamics_reflection(rule_number, L, initial_conditions, probab
     return grid
 
 
+
 def probabilistic_dynamics_initialandfinal(rule_number, L, initial_conditions, probability_list, timesteps):
     if not (0 <= rule_number <= 255):
         raise ValueError("Rule number not appropriate")
@@ -230,7 +265,8 @@ def probabilistic_dynamics_initialandfinal(rule_number, L, initial_conditions, p
     for i, probability in zip(initial_conditions, probability_list):
         row[i] = 1 if random.random() < probability else 0
     rows = [row.copy()] #So we take an independent "snapshot"
-    
+
+
     # Evolve through timesteps
     for i in range(timesteps):
         new_row = np.zeros(L, dtype=int)
@@ -244,7 +280,6 @@ def probabilistic_dynamics_initialandfinal(rule_number, L, initial_conditions, p
 
     grid = np.vstack(rows[::-1])
     return rows[0], "->", rows[-1]
-
 
 def vectorized_ic_probabilistic(L, initial_conditions, probability_list: list):
     import itertools
@@ -274,54 +309,6 @@ def markov_matrix_mapping_probabilistic(rule_number: int, L: int, p: float):
     print("        " + "  ".join(state_labels))
     print("       " + "---" * n)
 
-    for j, state in enumerate(all_states):
-        nxt = next_state(state, rule_number, L)
-
-        # bits that rule maps to 0 → always 0
-        # bits that rule maps to 1 → 1 with probability p, else 0
-        probabilistic_nxt = tuple(
-            1 if (bit == 1 and random.random() < p) else 0
-            for bit in nxt
-        )
-
-        i        = all_states.index(probabilistic_nxt)
-        M[i][j]  = 1
-        label    = ''.join(str(b) for b in state)
-        row      = "  ".join(f"{M[k][j]:.0f}" for k in range(n))
-        print(f"{label}  |  {row}")
-
-
-
-def markov_matrix_probabilistic(rule_number: int, L: int, p: float):
-    all_states = list(itertools.product([0, 1], repeat=L))
-    n = len(all_states)
-    M = np.zeros((n, n), dtype=float)
-
-    for j, state in enumerate(all_states):
-        nxt = next_state(state, rule_number, L)  # deterministic next state
-
-        # build the probabilistic next state
-        probabilistic_nxt = tuple(
-            1 if (bit == 1 and random.random() < p) else 0
-            for bit in nxt
-        )
-        # bit == 0 → always stays 0
-        # bit == 1 → becomes 1 with probability p, else 0
-
-        i = all_states.index(probabilistic_nxt)
-        M[i][j] = 1
-
-    return M
-
-def markov_matrix_noise(rule_number: int, L: int, probability: float):
-    """
-    Normal CA transition matrix but every bit in the output
-    has a small probability epsilon of flipping.
-    
-    probability = 0.0 → identical to normal deterministic markov_matrix
-    probability = 0.5 → completely random, rule means nothing
-    probability = 1 → like if the rule was inversed
-    """
     for j, state in enumerate(all_states):
         nxt = next_state(state, rule_number, L)
 
@@ -425,5 +412,3 @@ def algebraic_multiplicities(M):
             counts.append(1)
 
     return list(zip(unique_vals, counts)) # Dictionaries behave strangely with float numbers, so just use tuples in lists
-
-
