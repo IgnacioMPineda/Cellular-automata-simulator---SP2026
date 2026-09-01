@@ -135,8 +135,8 @@ def rule_1(rule):
     initial_conditions_2 = np.random.randint(0, 2, size=1000)
     row_1 = list(np.where(initial_conditions_1 == 1)[0])   
     row_2 = list(np.where(initial_conditions_2 == 1)[0])
-    system_1 = dynamics(rule, 1000, initial_conditions_1, 1000)
-    system_2 = dynamics(rule, 1000, initial_conditions_2, 1000)
+    system_1 = dynamics(rule, 1000, row_1, 1000)
+    system_2 = dynamics(rule, 1000, row_2, 1000)
 
     if state_comparison_slice(system_1, system_2, 999, axis=0)[1] <= 0.1:
         return True
@@ -197,11 +197,11 @@ def rule_3(rule):
 
 
 def is_rule(rule):
-    if rule_1 == True:
+    if rule_1(rule) == True:
         return "Class I"
-    elif rule_2 == True:
+    elif rule_1(rule) == True:
         return "Class II"
-    elif rule_3 == True:
+    elif rule_3(rule) == True:
         return "Class III"
     else:
         return "Class IV"
@@ -265,25 +265,20 @@ def H_two_cells(rule, cell_i, cell_j):
     return h
 
 
-def mutual_information(rule, cell_i, cell_j):
-    try:
-        cell_j = cell_i+1
-    except:
-        cell_j = cell_i-1
-    
+def mutual_information(rule, cell_i, cell_j, L=1000):
     ic = np.random.randint(0, 2, size=L)
     row = list(np.where(ic == 1)[0])
-    system = dynamics(rule, 1000, row, 1000)
+    system = dynamics(rule, L, row, 1000)
     system = system[::-1]
-    
+
     x = system[:, cell_i]  # time series of cell i
     y = system[:, cell_j]  # time series of cell j
     
     H_x = H_cell(rule, cell_i)
     H_y = H_cell(rule, cell_j)
-    H_xy = H_two_cells(rule, cell_i, cell_j)
+    H_xy = H_two_cells(rule, cell_i, cell_j, L=L)
     
-    return H_x + H_y - H_xy
+    return H_x + H_y - H_xy 
 
 def H_cell_EC(rule, cell_i, array=None): ### EC for effective complexity
     if array is not None:
@@ -324,7 +319,9 @@ def H_two_cells_EC(rule, cell_i, cell_j, array_x=None, array_y=None):
 
 
 def effective_complexity(rule, L=500, timesteps=1000):
-    system = dynamics(rule, L, np.random.randint(0, 2, size=L), timesteps)
+    initial_conditions = np.random.randint(0, 2, size=L)
+    row = list(np.where(initial_conditions == 1)[0])
+    system = dynamics(rule, L, row, timesteps)
     initial = system[-1]  # t=0
     final   = system[0]   # last timestep
 
@@ -354,7 +351,7 @@ def damage(rule):
 
 
 def lyapunov_exponent(rule):
-    early = damage[:20] # Take early sample to avoid saturation
+    early = damage(rule)[:20] # Take early sample to avoid saturation
     early = early[early > 0] # Avoid log of 0
     t = np.arange(1, len(early) + 1)
     exponent = np.mean(np.log(early) / t)
