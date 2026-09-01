@@ -228,6 +228,7 @@ def H_cell(rule, location): #Evolution of the single cell across the timeseries
     initial_conditions = np.random.randint(0, 2, size=1000)
     row = list(np.where(initial_conditions == 1)[0])
     system = dynamics(rule, 1000, row, 1000)
+    system = system[::-1]
     
     cell = system[:, location]
 
@@ -244,6 +245,7 @@ def H_two_cells(rule, cell_i, cell_j):
     initial_conditions = np.random.randint(0, 2, size=L)
     row = list(np.where(initial_conditions == 1)[0])
     system = dynamics(rule, 1000, row, 1000)
+    system = system[::-1]
     
     x = system[:, cell_i]  # time series of cell i
     y = system[:, cell_j]  # time series of cell j
@@ -272,6 +274,7 @@ def mutual_information(rule, cell_i, cell_j):
     ic = np.random.randint(0, 2, size=L)
     row = list(np.where(ic == 1)[0])
     system = dynamics(rule, 1000, row, 1000)
+    system = system[::-1]
     
     x = system[:, cell_i]  # time series of cell i
     y = system[:, cell_j]  # time series of cell j
