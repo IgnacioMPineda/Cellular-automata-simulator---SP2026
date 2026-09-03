@@ -12,7 +12,15 @@ def make_rule(rule_number: int) -> dict:
     neighbourhoods = [format(i, '03b') for i in range(7, -1, -1)]  # '111' down to '000'
  
     return {n: int(b) for n, b in zip(neighbourhoods, rule_bin)}
+    
+def complement_rule(rule_number: int) -> int:
+    if not (0 <= rule_number <= 255):
+        raise ValueError(f"Rule number must be between 0 and 255, got {rule_number}")
 
+    rule_bin = format(rule_number, '08b')
+    complement_bin = ''.join('1' if b == '0' else '0' for b in reversed(rule_bin))
+    return int(complement_bin, 2)
+    
 def dynamics(rule_number, L, initial_conditions, timesteps):
     if not (0 <= rule_number <= 255):
         raise ValueError("Rule number not appropiate")
