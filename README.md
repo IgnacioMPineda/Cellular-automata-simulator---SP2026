@@ -16,7 +16,7 @@ Delved into the behaviour of elementary CA dpeending on rule and initial conditi
 
 - Notebook 3:
 
-This notebook marks the beggining of the build up towards the study of quantum cellular automata. A probabilistic approach is taken for the initial conditions and the evolution of the system is compared to its classical counterpart. We also define relevant functions for the study of transition matrices for classical and semiclassical elementary cellular automata.
+This notebook marks the beggining of the build up towards the study of quantum cellular automata. A probabilistic approach is taken for the initial conditions and the evolution of the system is compared to its classical counterpart. We define semiclassical dynamics as those where each cell has a probability that it will be flipped and this new state will be used for computing the following timestep. We also define relevant functions for the study of transition matrices for classical and semiclassical elementary cellular automata and look at their properties, as well as of general stochastic matrices.
 
 - Notebook 4:
 
