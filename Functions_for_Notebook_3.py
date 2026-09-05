@@ -108,7 +108,21 @@ def dynamics_matrix(rule_number, L, initial_conditions, timesteps):
     return grid
 
 
+def rule_matrix_heatmap(rules, L, titles=None):
+    n = len(rules)
+    _, axes = plt.subplots(1, n, figsize=(4*n, 4))
+    if n == 1:
+        axes = [axes]
 
+    for ax, rule in zip(axes, rules):
+        M = markov_matrix(rule, L)
+        ax.imshow(M, cmap='binary', interpolation='nearest')
+        ax.set_title(titles[rule] if titles else f'Rule {rule}')
+        ax.set_xlabel('current state (col)')
+        ax.set_ylabel('next state (row)')
+
+    plt.tight_layout()
+    plt.show()
 
 def probabilistic_dynamics(rule_number, L, initial_conditions, probability_list, timesteps):
     if not (0 <= rule_number <= 255):
