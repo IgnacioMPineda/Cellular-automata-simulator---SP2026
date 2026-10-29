@@ -1,6 +1,10 @@
 import numpy as np
+import itertools
+import random
+import matplotlib.pyplot as plt
 
 from Functions_for_Notebook_1 import make_rule
+from Functions_for_Notebook_2 import is_reversible
 
 
 def make_rule(rule_number: int) -> dict:
@@ -107,7 +111,6 @@ def dynamics_matrix(rule_number, L, initial_conditions, timesteps):
     grid = np.array(rows[::-1])   # earliest at bottom, matching dynamics()
     return grid
 
-
 def rule_matrix_heatmap(rules, L, titles=None):
     n = len(rules)
     _, axes = plt.subplots(1, n, figsize=(4*n, 4))
@@ -123,6 +126,7 @@ def rule_matrix_heatmap(rules, L, titles=None):
 
     plt.tight_layout()
     plt.show()
+
 
 def probabilistic_dynamics(rule_number, L, initial_conditions, probability_list, timesteps):
     if not (0 <= rule_number <= 255):
@@ -486,28 +490,8 @@ def det_vs_noise(rule_number, L, probabilities):
         dets.append(abs(np.linalg.det(M)))
     return np.array(dets)
 
-reversible_rules = [i for i in range(256) if is_reversible(i)]
-print(f"Found {len(reversible_rules)} reversible rules: {reversible_rules}")
 
-L = 6
-probabilities = [0.0, 0.001, 0.01, 0.05, 0.1, 0.3, 0.5]
-
-for rule in reversible_rules[:4]:
-    dets = det_vs_noise(rule, L, probabilities)
-    print(f"\nRule {rule} (deterministically reversible):")
-    for p, det in zip(probabilities, dets):
-        M = markov_matrix_noise(rule, L, p)
-        print(f"  p={p:<6} det(M) = {det:.3e}   reversible? {is_reversible_matrix(M)}")
-
-plt.figure(figsize=(8, 5))
-for rule in reversible_rules[:4]:
-    dets = det_vs_noise(rule, L, np.linspace(0, 0.3, 15))
-    plt.semilogy(np.linspace(0, 0.3, 15), dets + 1e-300, marker='o', label=f'rule {rule}')
-plt.xlabel('noise probability')
-plt.ylabel('|det(M)|  (log scale)')
-plt.title(f'Reversibility collapse under noise, L={L}')
-plt.legend()
-plt.tight_layout()
-plt.show()
-
+def decode_state(index, L):
+        """Inverse of vectorized_ic's binary indexing convention."""
+        return np.array([(index >> (L - 1 - i)) & 1 for i in range(L)], dtype=int)
 
