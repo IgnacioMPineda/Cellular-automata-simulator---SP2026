@@ -434,7 +434,7 @@ def algebraic_multiplicities(M):
     return list(zip(unique_vals, counts)) # Dictionaries behave strangely with float numbers, so just use tuples in lists
 
 
-def semiclassical_markov_matrix(rule_number: int, L: int, probability: float):
+def probabilistic_markov_matrix(rule_number: int, L: int, probability: float):
    
     all_states = list(itertools.product([0, 1], repeat=L))
     n = len(all_states)
@@ -456,7 +456,7 @@ def semiclassical_markov_matrix(rule_number: int, L: int, probability: float):
     return M
 
 
-def semiclassical_dynamics(rule_number, L, initial_conditions, timesteps, probability):
+def probabilistic_dynamics(rule_number, L, initial_conditions, timesteps, probability):
     if not (0 <= rule_number <= 255):
         raise ValueError("Rule number not appropiate")
     rule = make_rule(rule_number)
