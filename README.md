@@ -20,4 +20,12 @@ This notebook marks the beggining of the build up towards the study of quantum c
 
 - Notebook 4:
 
+We conduct a rigorous spectral analysis of the stochastic matrices describing ECA.
+
+- Notebook 5:
+
+We conduct a rigorous spectral analysis of the stochastic matrices describing probabilistic CA.
+
+- Notebook 6:
+
 We carry out the study of quantum cellular automata and possible chaotic behaviour.
