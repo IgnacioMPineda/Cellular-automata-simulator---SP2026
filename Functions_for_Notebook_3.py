@@ -501,3 +501,10 @@ def decode(state_vector):
     nz = np.flatnonzero(state)
     return decode_state(int(nz[0]), L)
 
+def state(L, initial_conditions):
+    zero_vector = np.zeros(L)
+    zero_vector[initial_conditions] = 1
+    return(zero_vector)
+
+
+
