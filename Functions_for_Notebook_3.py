@@ -434,7 +434,7 @@ def algebraic_multiplicities(M):
     return list(zip(unique_vals, counts)) # Dictionaries behave strangely with float numbers, so just use tuples in lists
 
 
-def probabilistic_markov_matrix(rule_number: int, L: int, probability: float):
+def semiclassical_markov_matrix(rule_number: int, L: int, probability: float):
    
     all_states = list(itertools.product([0, 1], repeat=L))
     n = len(all_states)
@@ -456,7 +456,7 @@ def probabilistic_markov_matrix(rule_number: int, L: int, probability: float):
     return M
 
 
-def probabilistic_dynamics(rule_number, L, initial_conditions, timesteps, probability):
+def semiclassical_dynamics(rule_number, L, initial_conditions, timesteps, probability):
     if not (0 <= rule_number <= 255):
         raise ValueError("Rule number not appropiate")
     rule = make_rule(rule_number)
@@ -494,4 +494,10 @@ def det_vs_noise(rule_number, L, probabilities):
 def decode_state(index, L):
         """Inverse of vectorized_ic's binary indexing convention."""
         return np.array([(index >> (L - 1 - i)) & 1 for i in range(L)], dtype=int)
+
+def decode(state_vector):
+    state = np.asarray(state_vector)
+    L = int(np.log2(state.size))
+    nz = np.flatnonzero(state)
+    return decode_state(int(nz[0]), L)
 
